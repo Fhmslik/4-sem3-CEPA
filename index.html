@@ -121,7 +121,7 @@
                 <div id="portal-icon" class="text-8xl mb-6 transition-all duration-500">🚢</div>
                 <h2 id="portal-text" class="text-3xl font-bold text-blue-900 game-font mb-2 text-center">內地市場傳送門</h2>
                 <p id="portal-subtext" class="text-center text-blue-700 font-medium max-w-xs">
-                    請將標有 <span class="bg-red-500 text-white px-2 py-0.5 rounded-lg text-xs font-bold shadow-sm">Made in HK</span> 的香港產品拖進來享受零關稅！
+                    請將標有 <span class="bg-red-500 text-white px-2 py-0.5 rounded-lg text-xs font-bold shadow-sm">香港生產</span> 的香港產品拖進來享受零關稅！
                 </p>
             </div>
 
@@ -284,7 +284,7 @@
                     <div class="text-5xl mb-3">${item.icon}</div>
                     <span class="text-base font-bold text-gray-800">${item.name}</span>
                     <div class="mt-2 text-[10px] ${item.isHK ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-500'} px-2 py-0.5 rounded-full font-black uppercase">
-                        ${item.isHK ? 'Made in HK' : 'Imported'}
+                        ${item.isHK ? '香港生產' : '外國生產'}
                     </div>
                 `;
                 card.addEventListener('dragstart', (e) => {
