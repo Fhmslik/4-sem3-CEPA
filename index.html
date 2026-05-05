@@ -16,7 +16,11 @@
         }
 
         .game-font {
-            font-family: 'ZCOOL KuaiLe', cursive;
+            font-family: 'Microsoft JhengHei', 'Microsoft YaHei', sans-serif;
+        }
+
+        .title-font {
+            font-family: 'Microsoft JhengHei', 'Microsoft YaHei', sans-serif;
         }
 
         .item-card {
@@ -95,7 +99,7 @@
         <div class="flex items-center gap-3">
             <div class="bg-blue-600 text-white p-2 rounded-xl text-xl">💡</div>
             <div>
-                <h1 class="text-xl font-bold text-blue-900 game-font">CEPA 經貿特派員</h1>
+                <h1 class="text-xl font-bold text-blue-900 game-font title-font">CEPA 經貿特派員</h1>
                 <p id="stage-title" class="text-xs text-blue-600 font-bold tracking-widest uppercase">第一關：零關稅傳送門</p>
             </div>
         </div>
@@ -119,7 +123,7 @@
         <div id="drop-zone" class="drop-zone h-full rounded-[2rem] flex flex-col items-center justify-center p-8 relative overflow-hidden">
             <div id="portal-content" class="flex flex-col items-center">
                 <div id="portal-icon" class="text-8xl mb-6 transition-all duration-500">🚢</div>
-                <h2 id="portal-text" class="text-3xl font-bold text-blue-900 game-font mb-2 text-center">內地市場傳送門</h2>
+                <h2 id="portal-text" class="text-3xl font-bold text-blue-900 game-font title-font mb-2 text-center">內地市場傳送門</h2>
                 <p id="portal-subtext" class="text-center text-blue-700 font-medium max-w-xs">
                     請將標有 <span class="bg-red-500 text-white px-2 py-0.5 rounded-lg text-xs font-bold shadow-sm">香港生產</span> 的香港產品拖進來享受零關稅！
                 </p>
@@ -138,7 +142,7 @@
                 <div class="flex items-center gap-4">
                     <div id="char-icon" class="text-5xl bg-white p-3 rounded-2xl shadow-md border border-blue-100">⚖️</div>
                     <div>
-                        <h3 id="quiz-role" class="text-2xl font-bold text-blue-900">專業服務</h3>
+                        <h3 id="quiz-role" class="text-2xl font-bold text-blue-900 title-font">專業服務</h3>
                         <p class="text-blue-500 text-sm font-medium">關卡：CEPA 政策挑戰</p>
                     </div>
                 </div>
@@ -157,7 +161,7 @@
         <!-- 結算畫面 -->
         <div id="game-over" class="hidden-stage text-center py-10">
             <div class="text-8xl mb-6">🎊</div>
-            <h2 class="text-4xl font-bold text-blue-900 game-font mb-4">任務圓滿達成！</h2>
+            <h2 class="text-4xl font-bold text-blue-900 game-font title-font mb-4">任務圓滿達成！</h2>
             <p class="text-blue-700 text-lg mb-10 leading-relaxed font-medium">
                 太出色了！你已成功協助香港貨物順利通關，<br>並引領多個行業的人才成功北上發展。
             </p>
