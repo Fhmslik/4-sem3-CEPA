@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CEPA 城市經貿大冒險</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap');
+        
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #c3dafe 100%);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .game-font {
+            font-family: 'ZCOOL KuaiLe', cursive;
+        }
+
+        .item-card {
+            transition: all 0.2s ease;
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+        }
+
+        .item-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .drop-zone {
+            border: 4px dashed #3b82f6;
+            background: rgba(255, 255, 255, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .drop-zone.active {
+            background-color: rgba(59, 130, 246, 0.1);
+            transform: scale(1.03);
+            border-color: #2563eb;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .hidden-stage {
+            display: none !important;
+        }
+
+        .ans-btn {
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ans-btn:active {
+            transform: scale(0.95);
+        }
+
+        @keyframes pulse-orange {
+            0% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(249, 115, 22, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
+        }
+
+        .animate-pulse-custom {
+            animation: pulse-orange 2s infinite;
+        }
+
+        .feedback-pop {
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: translateY(50px) scale(0.8); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .animate-shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center p-4">
+
+    <!-- 狀態列 -->
+    <div class="w-full max-w-2xl flex justify-between items-center bg-white/80 backdrop-blur-md p-4 rounded-3xl shadow-xl mb-6 z-20 border border-white/50">
+        <div class="flex items-center gap-3">
+            <div class="bg-blue-600 text-white p-2 rounded-xl text-xl">💡</div>
+            <div>
+                <h1 class="text-xl font-bold text-blue-900 game-font">CEPA 經貿特派員</h1>
+                <p id="stage-title" class="text-xs text-blue-600 font-bold tracking-widest uppercase">第一關：零關稅傳送門</p>
+            </div>
+        </div>
+        <div class="text-right">
+            <div class="text-[10px] font-black text-blue-400 uppercase mb-1">進度 Progress</div>
+            <div class="w-40 h-3 bg-gray-200 rounded-full overflow-hidden border border-gray-100">
+                <div id="progress-bar" class="h-full bg-gradient-to-r from-yellow-400 to-orange-500 transition-all duration-700" style="width: 0%"></div>
+            </div>
+            <div id="score-display" class="text-2xl font-black text-blue-900 mt-1">0 <span class="text-sm text-blue-400">/ 1000</span></div>
+        </div>
+    </div>
+
+    <!-- 第一關：貨物貿易 -->
+    <div id="stage-1" class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-8 items-center h-[65vh]">
+        <div class="bg-white/40 backdrop-blur-sm p-6 rounded-[2rem] border-2 border-white shadow-inner flex flex-wrap justify-center gap-4 content-start overflow-y-auto max-h-full">
+            <div id="item-container" class="flex flex-wrap justify-center gap-4">
+                <!-- 由 JavaScript 動態生成 -->
+            </div>
+        </div>
+
+        <div id="drop-zone" class="drop-zone h-full rounded-[2rem] flex flex-col items-center justify-center p-8 relative overflow-hidden">
+            <div id="portal-content" class="flex flex-col items-center">
+                <div id="portal-icon" class="text-8xl mb-6 transition-all duration-500">🚢</div>
+                <h2 id="portal-text" class="text-3xl font-bold text-blue-900 game-font mb-2 text-center">內地市場傳送門</h2>
+                <p id="portal-subtext" class="text-center text-blue-700 font-medium max-w-xs">
+                    請將標有 <span class="bg-red-500 text-white px-2 py-0.5 rounded-lg text-xs font-bold shadow-sm">Made in HK</span> 的香港產品拖進來享受零關稅！
+                </p>
+            </div>
+
+            <button id="next-stage-btn" onclick="goToStage2()" class="hidden-stage bg-orange-500 text-white px-10 py-5 rounded-full font-bold text-2xl hover:bg-orange-600 transition-all animate-bounce shadow-2xl border-4 border-white animate-pulse-custom">
+                進入第二關 ➔
+            </button>
+        </div>
+    </div>
+
+    <!-- 第二關：專業服務挑戰 -->
+    <div id="stage-2" class="hidden-stage w-full max-w-3xl bg-white/80 backdrop-blur-lg p-8 rounded-[3rem] shadow-2xl border-2 border-white relative">
+        <div id="quiz-container">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-4">
+                    <div id="char-icon" class="text-5xl bg-white p-3 rounded-2xl shadow-md border border-blue-100">⚖️</div>
+                    <div>
+                        <h3 id="quiz-role" class="text-2xl font-bold text-blue-900">專業服務</h3>
+                        <p class="text-blue-500 text-sm font-medium">關卡：CEPA 政策挑戰</p>
+                    </div>
+                </div>
+                <div id="quiz-progress-text" class="text-blue-400 font-bold text-sm">問題 1 / 10</div>
+            </div>
+            
+            <div class="bg-white p-8 rounded-3xl shadow-inner mb-8 min-h-[160px] flex items-center border border-blue-50">
+                <p id="quiz-question" class="text-xl text-gray-800 font-bold leading-relaxed">載入中...</p>
+            </div>
+            
+            <div id="quiz-options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- 選項動態插入 -->
+            </div>
+        </div>
+        
+        <!-- 結算畫面 -->
+        <div id="game-over" class="hidden-stage text-center py-10">
+            <div class="text-8xl mb-6">🎊</div>
+            <h2 class="text-4xl font-bold text-blue-900 game-font mb-4">任務圓滿達成！</h2>
+            <p class="text-blue-700 text-lg mb-10 leading-relaxed font-medium">
+                太出色了！你已成功協助香港貨物順利通關，<br>並引領多個行業的人才成功北上發展。
+            </p>
+            <div class="flex justify-center gap-4">
+                <button onclick="location.reload()" class="bg-blue-600 text-white px-10 py-4 rounded-full font-bold text-xl hover:scale-105 transition-transform shadow-xl">
+                    重新挑戰
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 浮動回饋 -->
+    <div id="feedback" class="fixed bottom-12 px-8 py-4 rounded-full font-bold shadow-2xl z-50 feedback-pop hidden text-lg max-w-lg text-center"></div>
+
+    <script>
+        // --- 關卡 1 資料 ---
+        const s1_items = [
+            { id: 1, name: "中成藥", icon: "💊", isHK: true, desc: "正確！中成藥是香港傳統優勢，符合 CEPA 零關稅規則。" },
+            { id: 2, name: "進口紅酒", icon: "🍷", isHK: false, desc: "不對喔！這只是海外轉運，未在港進行實質加工。" },
+            { id: 3, name: "手工月餅", icon: "🥮", isHK: true, desc: "答對了！香港製造的食品在內地廣受歡迎且享有零關稅。" },
+            { id: 4, name: "精密零件", icon: "⚙️", isHK: true, desc: "賓果！香港本地組裝增值符合原產地規則。" },
+            { id: 5, name: "海外手機", icon: "📱", isHK: false, desc: "答錯了。非香港生產的電子產品無法享受 CEPA 優惠。" }
+        ];
+
+        // --- 關卡 2 資料 (由提供題庫轉換) ---
+        const s2_questions = [
+            {
+                q: "香港律師如何透過 CEPA 在內地執業？",
+                icon: "👨‍⚖️",
+                options: [
+                    { text: "通過國家法律考試", correct: true, info: "考取內地法律資格是香港律師在內地執業的正規途徑。" },
+                    { text: "憑港執照直接換領", correct: false, info: "兩地法律體系不同，目前仍需經過考試驗證而非直接換證。" }
+                ]
+            },
+            {
+                q: "香港牙醫在內地開設診所的限制？",
+                icon: "🩺",
+                options: [
+                    { text: "可設立獨資診所", correct: true, info: "CEPA 允許香港醫療服務提供者在內地獨資經營。" },
+                    { text: "必須與內地合資", correct: false, info: "過去有此限制，但 CEPA 已放寬至允許獨資。" }
+                ]
+            },
+            {
+                q: "CEPA 如何協助建築公司參與工程？",
+                icon: "🏗️",
+                options: [
+                    { text: "香港經驗視同內地", correct: true, info: "互認機制讓香港公司的實績可直接用於內地投標資格。" },
+                    { text: "免除技術安全審查", correct: false, info: "建築安全法規必須嚴格遵守，不能免除審查。" }
+                ]
+            },
+            {
+                q: "港產合拍片在內地上映的待遇？",
+                icon: "🎬",
+                options: [
+                    { text: "視同內地國產電影", correct: true, info: "合拍片不受進口配額限制，與國產片待遇相同。" },
+                    { text: "受進口配額限制", correct: false, info: "這正是 CEPA 致力消除的障礙，合拍片不佔用配額。" }
+                ]
+            },
+            {
+                q: "CEPA 對跨境會計師提供的便利？",
+                icon: "📊",
+                options: [
+                    { text: "延長臨時許可效期", correct: true, info: "延長執業許可證有效期可減少行政手續的負擔。" },
+                    { text: "通用香港會計準則", correct: false, info: "在內地營運仍需符合中國內地的會計核算準則。" }
+                ]
+            },
+            {
+                q: "CEPA 服務貿易最核心的目標？",
+                icon: "🌏",
+                options: [
+                    { text: "降低門檻促進融合", correct: true, info: "核心目標是透過減少限制來協助兩地互惠互利。" },
+                    { text: "將產業全面內遷", correct: false, info: "目的是擴張市場，而非將香港產業連根拔起。" }
+                ]
+            },
+            {
+                q: "「專業資格互認」的最大優勢？",
+                icon: "🎓",
+                options: [
+                    { text: "免除重複參加考試", correct: true, info: "透過互認機制簡化流程，節省專業人士的時間成本。" },
+                    { text: "保證獲得更高薪酬", correct: false, info: "薪資由市場決定，協議不干預個別企業的薪酬。" }
+                ]
+            },
+            {
+                q: "香港銀行進入內地市場的便利？",
+                icon: "🏦",
+                options: [
+                    { text: "降低總資產要求", correct: true, info: "降低門檻讓中小型香港銀行也能北上拓展業務。" },
+                    { text: "完全免繳企業稅", correct: false, info: "銀行利潤仍需按稅法繳納，並非完全免稅。" }
+                ]
+            },
+            {
+                q: "哪項最能體現「貿易便利化」？",
+                icon: "🛃",
+                options: [
+                    { text: "簡化海關通關手續", correct: true, info: "透過電子化與流程優化，大幅提升貨物流轉效率。" },
+                    { text: "增加商務簽證限制", correct: false, info: "便利化應是放寬而非收緊往來限制。" }
+                ]
+            },
+            {
+                q: "目前 CEPA 採用的管理模式？",
+                icon: "📋",
+                options: [
+                    { text: "採用負面清單模式", correct: true, info: "負面清單提升了開放的透明度，清單外均視同開放。" },
+                    { text: "採用正面清單模式", correct: false, info: "這是較早期的模式，現在已轉向負面清單管理模式。" }
+                ]
+            }
+        ];
+
+        let score = 0;
+        let s1_correct = 0;
+        let s1_target = s1_items.filter(i => i.isHK).length;
+        let s2_index = 0;
+
+        // --- 第一關初始化 ---
+        function initS1() {
+            const container = document.getElementById('item-container');
+            container.innerHTML = '';
+            s1_items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'item-card bg-white p-5 rounded-3xl shadow-md border-b-4 border-gray-200 flex flex-col items-center w-36';
+                card.draggable = true;
+                card.id = `item-${item.id}`;
+                card.innerHTML = `
+                    <div class="text-5xl mb-3">${item.icon}</div>
+                    <span class="text-base font-bold text-gray-800">${item.name}</span>
+                    <div class="mt-2 text-[10px] ${item.isHK ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-500'} px-2 py-0.5 rounded-full font-black uppercase">
+                        ${item.isHK ? 'Made in HK' : 'Imported'}
+                    </div>
+                `;
+                card.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('application/json', JSON.stringify(item));
+                    setTimeout(() => card.classList.add('opacity-0'), 0);
+                });
+                card.addEventListener('dragend', () => card.classList.remove('opacity-0'));
+                container.appendChild(card);
+            });
+        }
+
+        // --- 拖放邏輯 ---
+        const dropZone = document.getElementById('drop-zone');
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('active'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('active'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('active');
+            const data = JSON.parse(e.dataTransfer.getData('application/json'));
+            
+            if(data.isHK) {
+                score += 100;
+                s1_correct++;
+                showFeedback(data.desc, "bg-emerald-600 text-white");
+                document.getElementById(`item-${data.id}`).remove();
+                updateUI();
+                if(s1_correct === s1_target) completeS1();
+            } else {
+                showFeedback(data.desc, "bg-rose-600 text-white");
+                const card = document.getElementById(`item-${data.id}`);
+                card.classList.add('animate-shake');
+                setTimeout(() => card.classList.remove('animate-shake'), 500);
+            }
+        });
+
+        function completeS1() {
+            document.getElementById('portal-content').classList.add('hidden-stage');
+            document.getElementById('next-stage-btn').classList.remove('hidden-stage');
+            showFeedback("第一關達成！點擊按鈕開始專業服務挑戰！", "bg-yellow-500 text-blue-900");
+        }
+
+        // --- 第二關邏輯 ---
+        function goToStage2() {
+            document.getElementById('stage-1').classList.add('hidden-stage');
+            document.getElementById('stage-2').classList.remove('hidden-stage');
+            document.getElementById('stage-title').innerText = "第二關：專業服務挑戰";
+            updateUI();
+            loadQuiz();
+        }
+
+        function loadQuiz() {
+            if(s2_index >= s2_questions.length) {
+                document.getElementById('quiz-container').classList.add('hidden-stage');
+                document.getElementById('game-over').classList.remove('hidden-stage');
+                return;
+            }
+            const q = s2_questions[s2_index];
+            document.getElementById('quiz-progress-text').innerText = `問題 ${s2_index + 1} / ${s2_questions.length}`;
+            document.getElementById('char-icon').innerText = q.icon;
+            document.getElementById('quiz-question').innerText = q.q;
+            
+            const optionsBox = document.getElementById('quiz-options');
+            optionsBox.innerHTML = '';
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'ans-btn bg-white hover:bg-blue-50 text-blue-900 p-6 rounded-3xl font-bold text-lg shadow-md border-2 border-blue-100 transition-all text-left';
+                btn.innerHTML = `<span class="inline-block bg-blue-100 text-blue-600 w-8 h-8 rounded-full text-center leading-8 mr-3 font-bold">${idx + 1}</span> ${opt.text}`;
+                btn.onclick = () => {
+                    if(opt.correct) {
+                        score += 70; // 調整分數比例使總分趨向 1000
+                        showFeedback("答對了！" + opt.info, "bg-emerald-600 text-white");
+                    } else {
+                        showFeedback("答錯囉。" + opt.info, "bg-orange-600 text-white");
+                    }
+                    s2_index++;
+                    updateUI();
+                    setTimeout(loadQuiz, 2500);
+                };
+                optionsBox.appendChild(btn);
+            });
+        }
+
+        // --- 共用介面 ---
+        function updateUI() {
+            const displayScore = Math.min(score, 1000);
+            document.getElementById('score-display').innerHTML = `${displayScore} <span class="text-sm text-blue-400">/ 1000</span>`;
+            
+            const progress = (s1_correct + s2_index) / (s1_target + s2_questions.length);
+            document.getElementById('progress-bar').style.width = `${progress * 100}%`;
+        }
+
+        function showFeedback(msg, cls) {
+            const fb = document.getElementById('feedback');
+            fb.innerText = msg;
+            fb.className = `fixed bottom-12 px-8 py-4 rounded-3xl font-bold shadow-2xl z-50 feedback-pop ${cls}`;
+            fb.classList.remove('hidden');
+            setTimeout(() => fb.classList.add('hidden'), 2300);
+        }
+
+        window.onload = initS1;
+    </script>
+</body>
+</html>
