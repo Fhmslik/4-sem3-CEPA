@@ -55,6 +55,12 @@
             font-family: 'Microsoft JhengHei', '微軟正黑體', sans-serif;
         }
 
+        .badge-large {
+            font-size: 20px !important;
+            padding: 4px 8px !important;
+            font-weight: bold;
+        }
+
         @keyframes pulse-orange {
             0% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7); }
             70% { box-shadow: 0 0 0 15px rgba(249, 115, 22, 0); }
@@ -204,8 +210,8 @@
                 card.innerHTML = `
                     <div class="text-5xl mb-3">${item.icon}</div>
                     <span class="text-base font-bold text-gray-800">${item.name}</span>
-                    <div class="mt-2 text-[10px] ${item.isHK ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-500'} px-2 py-0.5 rounded-full font-black uppercase">
-                        ${item.isHK ? 'Made in HK' : 'Imported'}
+                    <div class="badge-large ${item.isHK ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-500'} rounded-full">
+                        ${item.isHK ? '香港生產' : '外國生產'}
                     </div>
                 `;
                 card.addEventListener('dragstart', (e) => {
