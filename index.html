@@ -61,6 +61,76 @@
             font-weight: bold;
         }
 
+        .feedback-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            display: none !important;
+        }
+
+        .feedback-overlay.show {
+            display: flex !important;
+        }
+
+        .feedback-box {
+            background: white;
+            padding: 40px;
+            border-radius: 30px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .feedback-box h3 {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .feedback-box p {
+            font-size: 18px;
+            color: #555;
+            margin-bottom: 25px;
+        }
+
+        .feedback-box button {
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .feedback-box button:hover {
+            transform: scale(1.05);
+        }
+
+        .correct-bg {
+            background: #10b981;
+            color: white;
+        }
+
+        .wrong-bg {
+            background: #ef4444;
+            color: white;
+        }
+
+        .next-btn {
+            background: #3b82f6;
+            color: white;
+            margin-top: 15px;
+        }
+
         @keyframes pulse-orange {
             0% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7); }
             70% { box-shadow: 0 0 0 15px rgba(249, 115, 22, 0); }
@@ -69,10 +139,6 @@
 
         .animate-pulse-custom {
             animation: pulse-orange 2s infinite;
-        }
-
-        .feedback-pop {
-            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
 
         @keyframes popIn {
@@ -134,7 +200,7 @@
         </div>
     </div>
 
-    <!-- 第二關：專業服務挑戰 (保持原樣) -->
+    <!-- 第二關：專業服務挑戰 -->
     <div id="stage-2" class="hidden-stage w-full max-w-3xl bg-white/80 backdrop-blur-lg p-8 rounded-[3rem] shadow-2xl border-2 border-white relative">
         <div id="quiz-container">
             <div class="flex items-center justify-between mb-6">
@@ -163,7 +229,14 @@
         </div>
     </div>
 
-    <div id="feedback" class="fixed bottom-12 px-8 py-4 rounded-3xl font-bold shadow-2xl z-50 feedback-pop hidden text-lg max-w-lg text-center"></div>
+    <!-- 第一關反饋彈窗 -->
+    <div id="feedback-overlay" class="feedback-overlay">
+        <div class="feedback-box">
+            <h3 id="feedback-title">正確！</h3>
+            <p id="feedback-message">這是香港生產的產品</p>
+            <button class="next-btn" onclick="closeFeedback()">下一步</button>
+        </div>
+    </div>
 
     <script>
         const s1_items = [
@@ -198,6 +271,7 @@
         let s1_correct = 0;
         let s1_target = s1_items.filter(i => i.isHK).length;
         let s2_index = 0;
+        let pendingAction = null;
 
         function initS1() {
             const container = document.getElementById('item-container');
@@ -223,6 +297,36 @@
             });
         }
 
+        function showFeedback(isCorrect, message) {
+            const overlay = document.getElementById('feedback-overlay');
+            const title = document.getElementById('feedback-title');
+            const msgBox = document.getElementById('feedback-message');
+            const box = overlay.querySelector('.feedback-box');
+            
+            title.innerText = isCorrect ? '✓ 正確！' : '✗ 錯誤';
+            msgBox.innerText = message;
+            
+            if (isCorrect) {
+                title.style.color = '#10b981';
+                box.style.borderTop = '5px solid #10b981';
+            } else {
+                title.style.color = '#ef4444';
+                box.style.borderTop = '5px solid #ef4444';
+            }
+            
+            overlay.classList.add('show');
+        }
+
+        function closeFeedback() {
+            const overlay = document.getElementById('feedback-overlay');
+            overlay.classList.remove('show');
+            
+            if (pendingAction) {
+                pendingAction();
+                pendingAction = null;
+            }
+        }
+
         const dropZone = document.getElementById('drop-zone');
         dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('active'); });
         dropZone.addEventListener('dragleave', () => dropZone.classList.remove('active'));
@@ -230,15 +334,19 @@
             e.preventDefault();
             dropZone.classList.remove('active');
             const data = JSON.parse(e.dataTransfer.getData('application/json'));
+            
             if(data.isHK) {
                 score += 30; 
                 s1_correct++;
-                showFeedback(data.desc, "bg-emerald-600 text-white");
+                showFeedback(true, data.desc);
                 document.getElementById(`item-${data.id}`).remove();
-                updateUI();
-                if(s1_correct === s1_target) completeS1();
+                
+                pendingAction = () => {
+                    updateUI();
+                    if(s1_correct === s1_target) completeS1();
+                };
             } else {
-                showFeedback(data.desc, "bg-rose-600 text-white");
+                showFeedback(false, data.desc);
                 const card = document.getElementById(`item-${data.id}`);
                 card.classList.add('animate-shake');
                 setTimeout(() => card.classList.remove('animate-shake'), 500);
@@ -317,8 +425,7 @@
                 btn.className = 'ans-btn bg-white hover:bg-blue-50 text-blue-900 p-6 rounded-3xl font-bold text-lg shadow-md border-2 border-blue-100 transition-all text-left';
                 btn.innerHTML = `<span class="inline-block bg-blue-100 text-blue-600 w-8 h-8 rounded-full text-center leading-8 mr-3 font-bold">${idx + 1}</span> ${opt.text}`;
                 btn.onclick = () => {
-                    if(opt.correct) { score += 100; showFeedback("答對了！" + opt.info, "bg-emerald-600 text-white"); }
-                    else { showFeedback("答錯囉。" + opt.info, "bg-orange-600 text-white"); }
+                    if(opt.correct) { score += 100; }
                     s2_index++;
                     updateUI();
                     setTimeout(loadQuiz, 2000);
@@ -331,14 +438,6 @@
             document.getElementById('score-display').innerHTML = `${score} <span class="text-sm text-blue-400">/ 1000</span>`;
             const progress = (s1_correct + s2_index) / (s1_target + s2_questions.length);
             document.getElementById('progress-bar').style.width = `${progress * 100}%`;
-        }
-
-        function showFeedback(msg, cls) {
-            const fb = document.getElementById('feedback');
-            fb.innerText = msg;
-            fb.className = `fixed bottom-12 px-8 py-4 rounded-3xl font-bold shadow-2xl z-50 feedback-pop ${cls}`;
-            fb.classList.remove('hidden');
-            setTimeout(() => fb.classList.add('hidden'), 1800);
         }
 
         window.onload = initS1;
